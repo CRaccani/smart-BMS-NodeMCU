@@ -1,7 +1,16 @@
-// ++++++++++ SMART BMS ++++++++++
-  // 23/09/2018
-// Using Arduino Mega256
-// https://github.com/bres55/Smart-BMS-arduino-Reader/blob/master/README.md
+/* ++++++++++ SMART BMS ++++++++++
+
+  Original code by bress55
+  23/09/2018
+  Using Arduino Mega256
+  https://github.com/bres55/Smart-BMS-arduino-Reader/blob/master/README.md
+
+  20/04/2020
+  Refactored and updated to use NodeMCU ESP8266.
+  Moved to PlatformIO from Arduino IDE.
+  https://github.com/CRaccani/smart-BMS-NodeMCU/blob/master/README.md
+  
+*/
 #include <Arduino.h>
 
 #define MySerial Serial  // Serial   - set this to the hardware serial port you wish to use... 
@@ -639,7 +648,6 @@ void setup()
   MyDebug.begin(115200);
   MyDebug.setDebugOutput(true);
   MyDebug.println("Starting up ...");
-  ;MyDebug.begin(115200);
 }
 
 void loop()
