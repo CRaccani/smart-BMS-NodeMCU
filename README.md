@@ -28,17 +28,17 @@ NodeMCU wiring:
 
 JBDTools V1.1 Pack Info screen:
 
-![JBDTools V1.1 Pack Info screen.](/images/JBDToolsV1_1PackInfo.png)
+![JBDTools V1.1 Pack Info screen.](/images/PackInfo.png)
 
-JBDTools V1.1 Settings screen
+JBDTools V1.1 Settings screen:
 
-![JBDTools V1.1 Settings screen.](/images/JBDToolsV1_1Settings.png)
+![JBDTools V1.1 Settings screen.](/images/Settings.png)
 
 JBDTools V1.1 Calibration screen:
 
-![JBDTools V1.1 Calibration screen.](/images/JBDToolsV1_1Calibration.png)
+![JBDTools V1.1 Calibration screen.](/images/Calibration.png)
 
 JBDTools V1.1 OtherFunction screen:
 
-![JBDTools V1.1 OtherFunction screen.](/images/JBDToolsV1_1OtherFunction.png)
+![JBDTools V1.1 OtherFunction screen.](/images/OtherFunction.png)
 
