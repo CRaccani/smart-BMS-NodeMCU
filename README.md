@@ -12,10 +12,13 @@ A lot of hard work by others have brought about the decoding of 99% of the proto
 There are many promising similar projects here on GitHub and these have offered many insights and are a mine of amazing information. This is a testament to the openness of the GitHub community.
 
 Proof of concept/Testing program I have found most usefull is by Bress55:
+
+
 Original code by bress55
 23/09/2018
 Using Arduino Mega256
 https://github.com/bres55/Smart-BMS-arduino-Reader/blob/master/README.md
+
 
 I have taken the code and refactored and updated it to use NodeMCU ESP8266.
 Moved to PlatformIO from Arduino IDE.

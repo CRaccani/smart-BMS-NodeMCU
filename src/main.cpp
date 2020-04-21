@@ -66,7 +66,6 @@ void e_write_request_end()
   MySerial.write(data, 9);
 }
 
-//  uint16_t PackCurrent = two_ints_into16(highbyte, lowbyte);
 uint16_t two_ints_into16(int highbyte, int lowbyte) // turns two bytes into a single long integer
 {
   a16bitvar = (highbyte);
@@ -759,8 +758,8 @@ void loop()
   // CURRENT
   highbyte = (inInts[2]); // bytes 2 and 3
   lowbyte = (inInts[3]);
-  int PackCurrent = two_ints_into16(highbyte, lowbyte);
- // uint16_t PackCurrent = two_ints_into16(highbyte, lowbyte);
+  uint16_t PackCurrent = two_ints_into16(highbyte, lowbyte);
+
   float PackCurrentf = PackCurrent / 100.0f; // convert to float and leave at 2 dec places
   MyDebug.print("   Current = ");
   MyDebug.print(PackCurrentf);
