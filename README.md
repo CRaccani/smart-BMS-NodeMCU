@@ -11,6 +11,9 @@ A lot of hard work by others have brought about the decoding of 99% of the proto
 
 There are many promising similar projects here on GitHub and these have offered many insights and are a mine of amazing information. This is a testament to the openness of the GitHub community.
 
+Best decode info for protocol:
+https://github.com/simat/BatteryMonitor
+
 Proof of concept/Testing program I have found most usefull is by Bress55:
 
 
