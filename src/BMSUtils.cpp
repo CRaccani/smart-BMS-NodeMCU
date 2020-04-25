@@ -17,6 +17,9 @@
 #define MySerial Serial  // Serial   - set this to the hardware serial port you wish to use... 
 #define MyDebug Serial1  // Serial 1 - monitor output - Debug print()
 
+uint16_t  intVoltages[14];
+uint16_t intPrevVoltages[14] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+
 String inString = "";      // string to hold input
 String inStringpc = "";    // string to hold PC input
 int show = 1;    // show all data flag
@@ -198,6 +201,8 @@ void storeCellVoltageInfo()
     MyDebug.print(" ");
     MyDebug.print(Cellnowf, 3); // 3 decimal places
     MyDebug.println();
+    //String volt = String(Cellnowf, 3);
+    intVoltages[(cell/2)-1] = Cellnow;
     cell+=2;
   }
   
@@ -211,13 +216,14 @@ void storeCellVoltageInfo()
   float Celldiff = CellMax - CellMin; // difference between highest and lowest
 
   MyDebug.print("Diff: "); // diference heading
-  MyDebug.println(Celldiff, 3); // 3 decimal places
+  MyDebug.println(Celldiff*1000, 0); // 3 decimal places
 
   Cellsum = Cellsum / (Length / 2); // Average of Cells
   
   MyDebug.print("Avg: "); // Average heading
   MyDebug.println(Cellsum, 3); // 3 decimal places
   MyDebug.println();
+
 }
   
 void storeBasicInfo()
@@ -314,8 +320,6 @@ void call_get_cells_v()
  // returns with up to date, inString= chars, inInts[]= numbers,
  // chksum in last 2 bytes
   get_bms_feedback();
-
-  storeCellVoltageInfo();
 }
 
 void call_Hardware_info()
@@ -764,10 +768,11 @@ void otherFuntionBalanceControl()
   //  bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb TEMP balance control end  bbbbbbbbbbbbbbbbbbbbbbb  
 }
 
+/*
 void setup() 
 {
   // Serial for comms to BMS
-  Serial.begin(9600/*, SERIAL_8N1*/);
+  Serial.begin(9600);
 
   //Use alternative GPIO pins of D7/D8
   //D7 = GPIO13 = RECEIVE SERIAL
@@ -779,15 +784,17 @@ void setup()
   MyDebug.setDebugOutput(true);
   MyDebug.println("Starting up ...");
 }
+*/
 
+/*
 void loop()
 {
-  /*
-  write_request_start();// Found this helps timing issue, by saying hello, hello.
-  write_request_end() ; // Or maybe it flushes out any rogue data.
-  write_request_start();// Any way it works,
-  write_request_end() ; // And accomodates long delays if you want them at the end.
-*/
+  
+//  write_request_start();// Found this helps timing issue, by saying hello, hello.
+//  write_request_end() ; // Or maybe it flushes out any rogue data.
+//  write_request_start();// Any way it works,
+//  write_request_end() ; // And accomodates long delays if you want them at the end.
+
   //-------------------- EPROM READS START ----------------------------------
   // get  POVP, POVPRelease, PUVP, PUVPRelease, 
   // COVP, COVPRelease, CUVP, CUVPRelease, CHGOC, DSGOC
@@ -799,6 +806,7 @@ void loop()
   // dont really need this
   // HARDWARE INF 05
   // get hardware info 05, the name of it, not really useful
+  
   call_Hardware_info(); // requests model number etc
   getPOVP();
   getPUVP();
@@ -843,4 +851,4 @@ void loop()
 // eeeeeeeeeeeeeeeeeeeeennnnnnnnnnnnnnnnnnnnnnndddddddddddddddddddddd
 //     END
 // eeeeeeeeeeeeeeeeeeeeennnnnnnnnnnnnnnnnnnnnnndddddddddddddddddddddd
-
+*/
