@@ -23,9 +23,13 @@ extern uint8_t BYTE1, BYTE2, BYTE3, BYTE4, BYTE5, BYTE6, BYTE7, BYTE8, BYTE9, BY
 extern uint8_t inInts[40], data[9];   // an array to hold incoming data, not seen any longer than 34 bytes, or 9
 extern uint16_t a16bitvar;
 extern float  eresultf; //Cellv1, Cellv2, Cellv3, Cellv4, Cellv5, Cellv6, Cellv7, Cellv8,
-extern float CellMin, CellMax, Cellsum;
-extern uint16_t intVoltages[14];
-extern uint16_t intPrevVoltages[14];
+extern float CellMin, CellMax, Cellsum, Celldiff;
+
+// Broadcast cache
+extern uint16_t voltages[14];
+extern uint16_t voltagesMax[14];
+extern uint16_t voltagesMin[14];
+
 // Pack Voltage
 extern float PackVoltagef;
 // CURRENT
@@ -141,7 +145,8 @@ void loop()
   server.handleClient();
 
   uint64_t now = millis();
-  if(now - messageTimestamp > 2000) {
+  if(now - messageTimestamp > 2000) 
+  {
     messageTimestamp = now;
 
     write_request_start(); 
@@ -151,25 +156,40 @@ void loop()
 
     storeCellVoltageInfo();
 
-    // send packvoltage, packcurrent and remaining state of charge
+    // send packvoltage, packcurrent and remaining state of charge(SOC).
     webSocket.broadcastTXT(
-      "info,"+String(PackVoltagef, 2)+","+String(PackCurrentf, 2)+","+String(RSOC)
+      "info,"+
+      String(PackVoltagef, 2)+","+
+      String(PackCurrentf, 2)+","+
+      String(RSOC)+","+
+      String(Cellsum, 3)+","+
+      String(CellMax, 3)+","+
+      String(CellMin, 3)+","+
+      String(Celldiff,0)
     );
     
+    float thisCell, thisCellMax, thisCellMin;
     for (int cell=0; cell<14; cell++)
     {
-       float Cell = intVoltages[cell] / 1000.0f; // convert to float
-        webSocket.broadcastTXT("cell,"+String(cell)+","+String(Cell, 3));
+      thisCell = voltages[cell] / 1000.0f; // convert to float
+      thisCellMax = voltagesMax[cell] / 1000.0f;
+      thisCellMin = voltagesMin[cell] / 1000.0f;
+      webSocket.broadcastTXT("cell,"+
+                              String(cell)+","+
+                              String(thisCell, 2)+","+
+                              String(thisCellMax, 2)+","+
+                              String(thisCellMin, 2)
+                            );
     
     }
 
     // tidy up
-  Cellsum = 0;
-  CellMin = 5;
-  CellMax = 0;
-  Length = 0;
-  // new line, what ever happens
-  MyDebug.println("");
-  MyDebug.println("");
+    Cellsum = 0;
+    CellMin = 5;
+    CellMax = 0;
+    Length = 0;
+    // new line, what ever happens
+    MyDebug.println("");
+    MyDebug.println("");
   }
 }

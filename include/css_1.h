@@ -10,12 +10,12 @@ body{margin:0;font-family:Arial,Helvetica,sans-serif;}
 
 .logocontainer{float:left;width:191px;height:52px;}
 .info {width:100%;padding:4px;}
-.info .stat {display:block;border:solid 2px gray;padding:2px;margin:2px;float:left;min-width:120px;}
+.info .stat {display:block;border:solid 2px gray;padding:2px;margin:2px;float:left;min-width:90px;}
 .info .stat .x {display:block;width:100%;text-align:right;}
 .info .stat .t {font-size:10pt;color:darkgray;}
-.info .stat .v {font-size:22pt;font-family: 'Nova Mono', monospace;font-weight:bold;color:#1e90ff;}
+.info .stat .v {font-size:16pt;font-family: 'Nova Mono', monospace;font-weight:bold;color:#1e90ff;}
 #refreshbar { width:100%; padding:0; margin:0; height:4px; background-color:#D3D3D3;}
-.graphs {height:768px;width:100%;}
+.graphs {height:400px;width:100%;}
 .ct-series-a .ct-bar {stroke:purple;stroke-width:25px;}
 form > div > div {padding-bottom:8px;}
 form label {width:220px;display:inline-block;text-align:right;}
@@ -41,7 +41,7 @@ h2 { margin:0; }
 @media screen and (max-width:640px){
   .page .region {width:98%;}
   .header a {float:none;padding:6px;font-size:14px;line-height:20px;}
-  .graphs {height:480px;width:95%;}
+  .graphs {height:400px;width:95%;}
   .info .stat .v { font-size:12pt;}
   .info .stat { min-width:85px;min-height:55px;}
   form label {width:160px;}

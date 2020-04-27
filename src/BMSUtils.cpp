@@ -17,8 +17,9 @@
 #define MySerial Serial  // Serial   - set this to the hardware serial port you wish to use... 
 #define MyDebug Serial1  // Serial 1 - monitor output - Debug print()
 
-uint16_t  intVoltages[14];
-uint16_t intPrevVoltages[14] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+uint16_t voltages[14];
+uint16_t voltagesMax[14] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+uint16_t voltagesMin[14] = {5000,5000,5000,5000,5000,5000,5000,5000,5000,5000,5000,5000,5000,5000};
 
 String inString = "";      // string to hold input
 String inStringpc = "";    // string to hold PC input
@@ -29,7 +30,7 @@ uint8_t BYTE1, BYTE2, BYTE3, BYTE4, BYTE5, BYTE6, BYTE7, BYTE8, BYTE9, BYTE10;
 uint8_t inInts[40], data[9];   // an array to hold incoming data, not seen any longer than 34 bytes, or 9
 uint16_t a16bitvar;
 float  eresultf; //Cellv1, Cellv2, Cellv3, Cellv4, Cellv5, Cellv6, Cellv7, Cellv8,
-float CellMin = 5, CellMax = 0, Cellsum = 0;
+float CellMin = 5, CellMax = 0, Cellsum = 0, Celldiff;
 
 // Pack Voltage
 float PackVoltagef;
@@ -198,18 +199,31 @@ void storeCellVoltageInfo()
     uint16_t Cellnow = two_ints_into16(highbyte, lowbyte);
     float Cellnowf = Cellnow / 1000.0f; // convert to float
     Cellsum = Cellsum + Cellnowf;
+
+    // Cache the cell info for broadcast
+    voltages[(cell/2)-1] = Cellnow; 
+    if (Cellnow > voltagesMax[(cell/2)-1]) 
+    {
+      voltagesMax[(cell/2)-1]=Cellnow;
+    }
+    if (Cellnow < voltagesMin[(cell/2)-1]) 
+    {
+      voltagesMin[(cell/2)-1]=Cellnow;
+    }
+
+    // Averaged cell values for pack
     if (Cellnowf > CellMax) {   // get high and low
       CellMax = Cellnowf;
     }
     if (Cellnowf < CellMin) {
       CellMin = Cellnowf;
     }
+    
     MyDebug.print (cell/2);
     MyDebug.print(" ");
     MyDebug.print(Cellnowf, 3); // 3 decimal places
     MyDebug.println();
-    //String volt = String(Cellnowf, 3);
-    intVoltages[(cell/2)-1] = Cellnow;
+   
     cell+=2;
   }
   
@@ -220,10 +234,10 @@ void storeCellVoltageInfo()
   MyDebug.print("CellMin: "); // CellMin heading
   MyDebug.println(CellMin, 3); // 3 decimal places
 
-  float Celldiff = CellMax - CellMin; // difference between highest and lowest
+  Celldiff = (CellMax - CellMin)*1000.0; // difference between highest and lowest
 
   MyDebug.print("Diff: "); // diference heading
-  MyDebug.println(Celldiff*1000, 0); // 3 decimal places
+  MyDebug.println(Celldiff, 0); // 3 decimal places
 
   Cellsum = Cellsum / (Length / 2); // Average of Cells
   
