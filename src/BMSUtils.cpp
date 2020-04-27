@@ -253,16 +253,16 @@ void storeBasicInfo()
     MyDebug.print("Pack Voltage = ");
     MyDebug.print(PackVoltagef);
 
-    // CURRENT
+    // CURRENT can be +ve and -ve value so int16_t (signed)
     highbyte = (inInts[2]); // bytes 2 and 3
     lowbyte = (inInts[3]);
-    uint16_t PackCurrent = two_ints_into16(highbyte, lowbyte);
+    int16_t PackCurrent = two_ints_into16(highbyte, lowbyte);
 
     PackCurrentf = PackCurrent / 100.0f; // convert to float and leave at 2 dec places
     MyDebug.print("   Current = ");
     MyDebug.print(PackCurrentf);
 
-    //REMAINING CAPACITY
+     //REMAINING CAPACITY
     highbyte = (inInts[4]);
     lowbyte = (inInts[5]);
     uint16_t RemainCapacity = two_ints_into16(highbyte, lowbyte);

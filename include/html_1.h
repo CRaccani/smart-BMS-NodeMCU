@@ -36,7 +36,7 @@ const char FILE_INDEX_HTML[] PROGMEM = R"=====(
         </div>
 
     <!-- prepare a DOM container with width and height -->
-    <div id="graph1" style="width:100%;height:768px;"></div>
+    <div id="graph1" style="width:100%;height:600px;"></div>
     
     <script type="text/javascript">
         var labels =[1,2,3,4,5,6,7,8,9,10,11,12,13,14];
@@ -128,7 +128,7 @@ const char FILE_INDEX_HTML[] PROGMEM = R"=====(
 			var option = {
 				color: ['#003366', '#006699', '#4cabce'],
 				tooltip: { trigger: 'axis', axisPointer: { type: 'cross', crossStyle: { color: '#999' } } },
-				legend: { data:['Voltage'] },
+				//legend: { data:['Voltage'] },
 				xAxis: [
 					{gridIndex: 0,name:'Cells',type:'category' }
 					],

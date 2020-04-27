@@ -153,7 +153,7 @@ void loop()
 
     // send packvoltage, packcurrent and remaining state of charge
     webSocket.broadcastTXT(
-      "info,"+String(PackVoltagef, 2)+","+String(PackCurrentf, 3)+","+String(RSOC)
+      "info,"+String(PackVoltagef, 2)+","+String(PackCurrentf, 2)+","+String(RSOC)
     );
     
     for (int cell=0; cell<14; cell++)
