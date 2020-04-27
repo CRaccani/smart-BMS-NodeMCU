@@ -2,6 +2,7 @@
     "C_Cpp.errorSquiggles": "Disabled",
     "files.associations": {
         "memory": "cpp",
-        "fstream": "cpp"
+        "fstream": "cpp",
+        "functional": "cpp"
     }
 }

@@ -4,6 +4,11 @@
 #include <ESP8266WebServer.h>
 #include <WebSocketsServer.h>
 #include "BMSUtils.h"
+#include "html_1.h"
+#include "css_1.h"
+//#include "jquery.h"
+//#include "logo.h"
+#include "echarts_js.h"
 
 #define MySerial Serial  // Serial   - set this to the hardware serial port you wish to use... 
 #define MyDebug Serial1  // Serial 1 - monitor output - Debug print()
@@ -21,6 +26,12 @@ extern float  eresultf; //Cellv1, Cellv2, Cellv3, Cellv4, Cellv5, Cellv6, Cellv7
 extern float CellMin, CellMax, Cellsum;
 extern uint16_t intVoltages[14];
 extern uint16_t intPrevVoltages[14];
+// Pack Voltage
+extern float PackVoltagef;
+// CURRENT
+extern float PackCurrentf;
+//RSOC remaining state of charge
+extern int RSOC;
 
 ESP8266WebServer server;
 WebSocketsServer webSocket=WebSocketsServer(81);
@@ -28,7 +39,7 @@ WebSocketsServer webSocket=WebSocketsServer(81);
 uint8_t pin_led = 2;
 String ssid = "reginald24";
 String password = "45acklaneeastsk72be";
-
+/*
 char webpage[] PROGMEM = R"=====(
 <html>
 <head>
@@ -68,7 +79,7 @@ char webpage[] PROGMEM = R"=====(
 </body>
 </html>
 )=====";
-
+*/
 void setup()
 {
   pinMode(pin_led, OUTPUT);
@@ -98,9 +109,27 @@ void setup()
   MyDebug.println(WiFi.localIP());
 
   server.on("/",[](){
-    server.send_P(200, "text/html", webpage);
+    server.send_P(200, "text/html", FILE_INDEX_HTML);
+    //server.send_P(200, "text/html", webpage);
   });
-  
+
+  server.on("/style.css", []() {
+    server.send_P(200, "text/css", FILE_STYLE_CSS);
+  });
+/*
+  server.on("/jquery.js", []() {
+    server.send_P(200, "text/javascript", FILE_JQUERY, FILE_JQUERY_SIZE_BYTES);
+    //response->addHeader("Content-Encoding", "gzip");
+  });
+ 
+  server.on("/echarts.simple.min.js", []() {
+    server.send_P(200, "text/javascript", FILE_ECHARTS, FILE_ECHARTS_SIZE_BYTES);
+  });
+  server.on("/logo.gif", HTTP_GET, []() {
+    server.send_P(200, "image/gif", FILE_LOGO, FILE_LOGO_SIZE_BYTES);
+  });
+*/
+
   server.begin();
   webSocket.begin();
 }
@@ -116,20 +145,22 @@ void loop()
     messageTimestamp = now;
 
     write_request_start(); 
+    call_Basic_info();
     call_get_cells_v();
     write_request_end();
 
     storeCellVoltageInfo();
 
+    // send packvoltage, packcurrent and remaining state of charge
+    webSocket.broadcastTXT(
+      "info,"+String(PackVoltagef, 2)+","+String(PackCurrentf, 3)+","+String(RSOC)
+    );
+    
     for (int cell=0; cell<14; cell++)
     {
-//      if (intPrevVoltages[cell] != intVoltages[cell])
-//      {
-        float Cell = intVoltages[cell] / 1000.0f; // convert to float
-//        intPrevVoltages[cell]= intVoltages[cell];
-        webSocket.broadcastTXT(String(cell+1)+","+String(Cell, 3));
+       float Cell = intVoltages[cell] / 1000.0f; // convert to float
+        webSocket.broadcastTXT("cell,"+String(cell)+","+String(Cell, 3));
     
-//      }
     }
 
     // tidy up

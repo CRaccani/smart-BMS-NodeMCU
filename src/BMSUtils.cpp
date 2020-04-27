@@ -31,6 +31,13 @@ uint16_t a16bitvar;
 float  eresultf; //Cellv1, Cellv2, Cellv3, Cellv4, Cellv5, Cellv6, Cellv7, Cellv8,
 float CellMin = 5, CellMax = 0, Cellsum = 0;
 
+// Pack Voltage
+float PackVoltagef;
+// CURRENT
+float PackCurrentf;
+//RSOC remaining state of charge
+int RSOC;
+
 // START //
 
 // prints integer in binary format, nibbles, with leading zeros
@@ -242,7 +249,7 @@ void storeBasicInfo()
     highbyte = (inInts[0]); // bytes 0 and 1
     lowbyte = (inInts[1]);
     uint16_t PackVoltage = two_ints_into16(highbyte, lowbyte);
-    float PackVoltagef = PackVoltage / 100.0f; // convert to float and leave at 2 dec places
+    PackVoltagef = PackVoltage / 100.0f; // convert to float and leave at 2 dec places
     MyDebug.print("Pack Voltage = ");
     MyDebug.print(PackVoltagef);
 
@@ -251,7 +258,7 @@ void storeBasicInfo()
     lowbyte = (inInts[3]);
     uint16_t PackCurrent = two_ints_into16(highbyte, lowbyte);
 
-    float PackCurrentf = PackCurrent / 100.0f; // convert to float and leave at 2 dec places
+    PackCurrentf = PackCurrent / 100.0f; // convert to float and leave at 2 dec places
     MyDebug.print("   Current = ");
     MyDebug.print(PackCurrentf);
 
@@ -265,7 +272,7 @@ void storeBasicInfo()
     MyDebug.print("Ah");
 
     //RSOC
-    int RSOC = (inInts[19]);
+    RSOC = (inInts[19]);
     MyDebug.print("   RSOC = ");
     MyDebug.print(RSOC);
     MyDebug.print("%");
