@@ -14,6 +14,9 @@
 */
 #include <Arduino.h>
 
+//#define CONSOLE_SHOW_VOLTAGES   (1)
+//#define CONSOLE_SHOW_BASIC_INFO (1)
+
 #define MySerial Serial  // Serial   - set this to the hardware serial port you wish to use... 
 #define MyDebug Serial1  // Serial 1 - monitor output - Debug print()
 
@@ -54,11 +57,10 @@ byte Bit_Reverse( byte x )
 }
 
 // prints integer in binary format, nibbles, with leading zeros
-void print_binary(int v, int v2, int num_places) // prints integer in binary format, nibbles, with leading zeros
+void print_binary(int v, int num_places) // prints integer in binary format, nibbles, with leading zeros
 // altered a bit, but got from here,  https://phanderson.com/arduino/arduino_display.html
 {
-  Serial.println("");
-  Serial.print("  ");
+  MyDebug.println("");
   int mask = 0, n, places = num_places;
   for (n = 1; n <= places; n++)
   {
@@ -70,42 +72,22 @@ void print_binary(int v, int v2, int num_places) // prints integer in binary for
   {
     if (v & (0x0001 << (places - 1)))
     {
-      Serial.print("1        ");
+       MyDebug.print("1 ");
       cellBallance[places-1] = -1;
     }
     else
     {
-      Serial.print("0        ");
+       MyDebug.print("0 ");
       cellBallance[places-1] = 0;
     }
     --places;
     if (((places % 4) == 0) && (places != 0))
     {
-      Serial.print("");
+       MyDebug.print("");
     }
   }
-  //v2= Bit_Reverse( v2 );
-  v2 = v2 & mask;  // truncate v to specified number of places
-  places = num_places;
-  while (places)
-  {
-    if (v2 & (0x0001 << (places - 1)))
-    {
-      Serial.print("1        ");
-      cellBallance[(places-1)+8] = -1;
-    }
-    else
-    {
-      Serial.print("0        ");
-      cellBallance[(places-1)+8] = 0;
-    }
-    --places;
-    if (((places % 4) == 0) && (places != 0))
-    {
-      Serial.print("");
-    }
-  
-  }
+ MyDebug.println();
+
 }
 
 void flush()
@@ -216,7 +198,10 @@ uint8_t call_read_eprom()
 void storeCellVoltageInfo()
 {
   // and the values
-  MyDebug.println ("Cell");
+  #ifdef CONSOLE_SHOW_VOLTAGES
+    MyDebug.println ("Cell");
+  #endif
+
   int cell = 2;
   for (int i = 0; i < Length; i = i + 2) {
     highbyte = (inInts[i]);
@@ -243,62 +228,93 @@ void storeCellVoltageInfo()
     if (Cellnowf < CellMin) {
       CellMin = Cellnowf;
     }
-    
-    MyDebug.print (cell/2);
-    MyDebug.print(" ");
-    MyDebug.print(Cellnowf, 3); // 3 decimal places
-    MyDebug.println();
-   
+
+    #ifdef CONSOLE_SHOW_VOLTAGES
+      MyDebug.print (cell/2);
+      MyDebug.print(" ");
+      MyDebug.print(Cellnowf, 3); // 3 decimal places
+      MyDebug.println();
+    #endif
+
     cell+=2;
   }
   
-  MyDebug.println();
-  MyDebug.print("CellMax: "); // CellMax heading
-  MyDebug.println(CellMax, 3); // 3 decimal places
+  #ifdef CONSOLE_SHOW_VOLTAGES
+    MyDebug.println();
+    MyDebug.print("CellMax: "); // CellMax heading
+    MyDebug.println(CellMax, 3); // 3 decimal places
 
-  MyDebug.print("CellMin: "); // CellMin heading
-  MyDebug.println(CellMin, 3); // 3 decimal places
+    MyDebug.print("CellMin: "); // CellMin heading
+    MyDebug.println(CellMin, 3); // 3 decimal places
+  #endif
 
   Celldiff = (CellMax - CellMin)*1000.0; // difference between highest and lowest
 
-  MyDebug.print("Diff: "); // diference heading
-  MyDebug.println(Celldiff, 0); // 3 decimal places
+  #ifdef CONSOLE_SHOW_VOLTAGES
+    MyDebug.print("Diff: "); // diference heading
+    MyDebug.println(Celldiff, 0); // 3 decimal places
+  #endif
 
   Cellsum = Cellsum / (Length / 2); // Average of Cells
   
-  MyDebug.print("Avg: "); // Average heading
-  MyDebug.println(Cellsum, 3); // 3 decimal places
-  MyDebug.println();
+  #ifdef CONSOLE_SHOW_VOLTAGES
+    MyDebug.print("Avg: "); // Average heading
+    MyDebug.println(Cellsum, 3); // 3 decimal places
+    MyDebug.println();
+  #endif
 
 }
   
 void storeBasicInfo()
 {
-    //  MyDebug.print(" BC= ");
-    //BalanceCode=two_ints_into16(inInts[14],inInts[13]);
-     //BalanceCode= inInts[13]; //  the 13th byte
-     // reverse the bits, so they are in same order as cells
-   // BalanceCode = Bit_Reverse( BalanceCode ) ; 
-    //  MyDebug.print(BalanceCode, BIN); 
+  #ifdef CONSOLE_SHOW_BASIC_INFO  
+    MyDebug.println("Basic Info.");
+  
+    MyDebug.println();
+    for (int i = 0; i < 40; i++) 
+    {
+      MyDebug.print(inInts[i], HEX);
+      MyDebug.print(" ");
+    }  
+    MyDebug.println();
+  #endif
+
+  BalanceCode= inInts[12]; //  the 12th byte cells 16-9
+ // BalanceCode = 34;
+  //MyDebug.print("Balance code[12]: "); MyDebug.println(BalanceCode);
+  // reverse the bits, so they are in same order as cells
+ // BalanceCode = Bit_Reverse( BalanceCode ) ; 
+  //MyDebug.println("Reversed code[13]: "); MyDebug.println(BalanceCode);
+  print_binary(BalanceCode, 8);
+  //move to hight cells to upper part of cell array
+  for (int i = 0; i < 8; i++) 
+  {
+    cellBallance[i+8]=cellBallance[i];
+  }  
+  //MyDebug.println(BalanceCode, BIN); 
     // works, but, loses leading zeros and get confusing on screen
     // print balance state as binary, cell 1 on the right, cell 8 on left
     // Reversed this. 1 on left, 8 on right
+  
+  
+  BalanceCode= inInts[13]; //  the 13th byte cells 8-1
+  //BalanceCode = 34;
+  //MyDebug.print("Balance code[13]: "); MyDebug.println(BalanceCode);
+ // BalanceCode = Bit_Reverse( BalanceCode );
+  //MyDebug.println("Reversed code[14]: "); MyDebug.print(BalanceCode);
+  //MyDebug.println(BalanceCode, BIN); 
+  print_binary(BalanceCode, 8);
     
-    print_binary(inInts[13],inInts[14], 8);
-   // BalanceCode= inInts[14]; //  the 14th byte
-   // BalanceCode = Bit_Reverse( BalanceCode ) ; 
-    //print_binary(BalanceCode, 8);
-    
-    MyDebug.println("Balancing Cells = 1");
-    MyDebug.println(" ");
-
     // PACK VOLTAGE,, bytes 0 and 1, its 16 bit, high and low
     highbyte = (inInts[0]); // bytes 0 and 1
     lowbyte = (inInts[1]);
     uint16_t PackVoltage = two_ints_into16(highbyte, lowbyte);
     PackVoltagef = PackVoltage / 100.0f; // convert to float and leave at 2 dec places
-    MyDebug.print("Pack Voltage = ");
-    MyDebug.print(PackVoltagef);
+
+    #ifdef CONSOLE_SHOW_BASIC_INFO
+      MyDebug.print("Pack Voltage = ");
+      MyDebug.print(PackVoltagef);
+    #endif
 
     // CURRENT can be +ve and -ve value so int16_t (signed)
     highbyte = (inInts[2]); // bytes 2 and 3
@@ -306,43 +322,57 @@ void storeBasicInfo()
     int16_t PackCurrent = two_ints_into16(highbyte, lowbyte);
 
     PackCurrentf = PackCurrent / 100.0f; // convert to float and leave at 2 dec places
-    MyDebug.print("   Current = ");
-    MyDebug.print(PackCurrentf);
+    #ifdef CONSOLE_SHOW_BASIC_INFO
+      MyDebug.print("   Current = ");
+      MyDebug.print(PackCurrentf);
+    #endif
 
      //REMAINING CAPACITY
     highbyte = (inInts[4]);
     lowbyte = (inInts[5]);
     uint16_t RemainCapacity = two_ints_into16(highbyte, lowbyte);
     float RemainCapacityf = RemainCapacity / 100.0f; // convert to float and leave at 2 dec places
-    MyDebug.print("   Remaining Capacity = ");
-    MyDebug.print(RemainCapacityf);
-    MyDebug.print("Ah");
+    
+    #ifdef CONSOLE_SHOW_BASIC_INFO
+      MyDebug.print("   Remaining Capacity = ");
+      MyDebug.print(RemainCapacityf);
+      MyDebug.print("Ah");
+    #endif
 
     //RSOC
     RSOC = (inInts[19]);
-    MyDebug.print("   RSOC = ");
-    MyDebug.print(RSOC);
-    MyDebug.print("%");
+    
+    #ifdef CONSOLE_SHOW_BASIC_INFO
+      MyDebug.print("   RSOC = ");
+      MyDebug.print(RSOC);
+      MyDebug.print("%");
+    #endif
 
     //Temp probe 1
     highbyte = (inInts[23]);
     lowbyte = (inInts[24]);
     float Temp_probe_1 = two_ints_into16(highbyte, lowbyte);
     float Temp_probe_1f = (Temp_probe_1 - 2731) / 10.00f; // convert to float and leave at 2 dec places
-    MyDebug.println("");
-    MyDebug.print("Temp probe 1 = ");
-    MyDebug.print(Temp_probe_1f);
-    MyDebug.print(" ");
+    
+    #ifdef CONSOLE_SHOW_BASIC_INFO
+      MyDebug.println("");
+      MyDebug.print("Temp probe 1 = ");
+      MyDebug.print(Temp_probe_1f);
+      MyDebug.print(" ");
+    #endif
 
     //Temp probe 2
     highbyte = (inInts[25]);
     lowbyte = (inInts[26]);
     float Temp_probe_2 = two_ints_into16(highbyte, lowbyte);
     float Temp_probe_2f = (Temp_probe_2 - 2731) / 10.00f; // convert to float and leave at 2 dec places
-    MyDebug.print("   Temp probe 2 = ");
-    MyDebug.print(Temp_probe_2f);
-    MyDebug.println(" ");
-}
+    
+    #ifdef CONSOLE_SHOW_BASIC_INFO
+      MyDebug.print("   Temp probe 2 = ");
+      MyDebug.print(Temp_probe_2f);
+      MyDebug.println(" ");
+    #endif
+} 
 
 void call_Basic_info()
 // total voltage, current, Residual capacity, Balanced state, MOSFET control status
