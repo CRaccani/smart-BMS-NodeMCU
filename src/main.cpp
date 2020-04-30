@@ -7,7 +7,7 @@
 #include "html_1.h"
 #include "css_1.h"
 //#include "jquery.h"
-//#include "logo.h"
+#include "logo.h"
 #include "echarts_js.h"
 
 #define MySerial Serial  // Serial   - set this to the hardware serial port you wish to use... 
@@ -29,6 +29,7 @@ extern float CellMin, CellMax, Cellsum, Celldiff;
 extern uint16_t voltages[14];
 extern uint16_t voltagesMax[14];
 extern uint16_t voltagesMin[14];
+extern int cellBallance[14];
 
 // Pack Voltage
 extern float PackVoltagef;
@@ -84,6 +85,7 @@ char webpage[] PROGMEM = R"=====(
 </html>
 )=====";
 */
+
 void setup()
 {
   pinMode(pin_led, OUTPUT);
@@ -125,14 +127,17 @@ void setup()
     server.send_P(200, "text/javascript", FILE_JQUERY, FILE_JQUERY_SIZE_BYTES);
     //response->addHeader("Content-Encoding", "gzip");
   });
- 
-  server.on("/echarts.simple.min.js", []() {
-    server.send_P(200, "text/javascript", FILE_ECHARTS, FILE_ECHARTS_SIZE_BYTES);
-  });
-  server.on("/logo.gif", HTTP_GET, []() {
-    server.send_P(200, "image/gif", FILE_LOGO, FILE_LOGO_SIZE_BYTES);
-  });
 */
+
+  server.on("/echarts.simple.min.js", []() {
+    server.sendHeader("Content-Encoding", "gzip");
+    server.send_P(200, "text/javascript",  (const char*)FILE_ECHARTS, FILE_ECHARTS_SIZE_BYTES);
+  });
+
+  server.on("/logo.gif", []() {
+    server.send_P(200, "image/gif",  (const char*)FILE_LOGO, FILE_LOGO_SIZE_BYTES);
+  
+  });
 
   server.begin();
   webSocket.begin();
@@ -176,9 +181,10 @@ void loop()
       thisCellMin = voltagesMin[cell] / 1000.0f;
       webSocket.broadcastTXT("cell,"+
                               String(cell)+","+
-                              String(thisCell, 2)+","+
-                              String(thisCellMax, 2)+","+
-                              String(thisCellMin, 2)
+                              String(thisCell, 3)+","+
+                              String(thisCellMax, 3)+","+
+                              String(thisCellMin, 3)+","+
+                              String(cellBallance[cell])
                             );
     
     }

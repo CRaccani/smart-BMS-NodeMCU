@@ -8,17 +8,12 @@ const char FILE_INDEX_HTML[] PROGMEM = R"=====(
     <link href="style.css" rel="stylesheet">
     <title>smartBMS</title>
     <!-- including ECharts file-->
-    <!--
-    <script src="jquery.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
     <script src="echarts.simple.min.js" integrity="sha256-CxlxgbUXeGRJaKmzCtFtuI75BynXJMwegbBzSX9ANjY=" crossorigin="anonymous"></script>
-     -->
-    <script src="https://cdn.jsdelivr.net/npm/echarts@4.7.0/dist/echarts.common.min.js">
-    </script>
 </head>
 <body onresize="refresh()">
     <div class="header">
         <div class="logocontainer">
-            <img class="logo" src="" width="191" height="48" alt="smartBMS Monitor" />
+            <img class="logo" src="logo.gif" width="191" height="48" alt="smartBMS Monitor" />
             <div id="refreshbar"></div>
         </div>
         <div class="header-right">
@@ -40,15 +35,15 @@ const char FILE_INDEX_HTML[] PROGMEM = R"=====(
    </div>
 
     <!-- prepare a DOM container with width and height -->
-    <div id="graph1" style="width:100%;height:400px;"></div>
+    <div id="graph1" style="width:100%;height:500px;"></div>
     
     <script type="text/javascript">
         var labels =[1,2,3,4,5,6,7,8,9,10,11,12,13,14];
         var voltages = [4.3,4.3,4.3,4.3,4.3,4.3,4.3,4.3,4.3,4.3,4.3,4.3,4.3,4.3];
         var voltagesmin = [5,5,5,5,5,5,5,5,5,5,5,5,5,5];
         var voltagesmax = [0,0,0,0,0,0,0,0,0,0,0,0,0,0];
-        //var tempint = [25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25, 25];
-        //var tempext = [19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19, 19];
+        var tempint = [25, 25];
+        var balanceBit = [0,0,0,0,0,0,0,0,0,0,0,0,0,0];
        
         var Socket;
 
@@ -61,7 +56,16 @@ const char FILE_INDEX_HTML[] PROGMEM = R"=====(
             Socket = new WebSocket('ws://'+window.location.hostname+':81/');
             Socket.onmessage = function(event)
             {
-                //console.log('event.data: '+event.data);
+				var Elem = document.getElementById("refreshbar");
+         		Elem.style.position = "relative";
+         		Elem.animate({
+              		left: ['-200px', '0px']
+                 	},{ duration: 1000,        // number in ms [this would be equiv of your speed].
+                     easing: 'ease-in-out',
+                     iterations: 1,         // infinity or a number.
+                });
+			
+                console.log('event.data: '+event.data);
                 const str = event.data;
                 const arr = str.split(",");
                 if (arr[0]==='cell')
@@ -69,6 +73,7 @@ const char FILE_INDEX_HTML[] PROGMEM = R"=====(
                     voltages[arr[1]]= arr[2];
 					voltagesmax[arr[1]]= arr[3];
 					voltagesmin[arr[1]]= arr[4];
+					balanceBit[arr[1]]= arr[5];
                 }
                 else if (arr[0]==='info')
                 {
@@ -85,7 +90,8 @@ const char FILE_INDEX_HTML[] PROGMEM = R"=====(
 		            xAxis: { data: labels },
 		            series: [{ name: 'Voltage', data: voltages }
 		            ,{ name: 'Min V', data: voltagesmin }
-		            ,{ name: 'Max V', data: voltagesmax }]
+		            ,{ name: 'Max V', data: voltagesmax }
+					,{ name: 'CellTemperature', data: balanceBit }]
 		        });
 			}
         }
@@ -125,42 +131,36 @@ const char FILE_INDEX_HTML[] PROGMEM = R"=====(
 					fontSize: 14
 				}
 			};
-
-			var labelOption2 = {
-				  normal: {
-					  show: true,
-					  position: 'insideBottom',
-					  distance: 15,
-					  align: 'left',
-					  verticalAlign: 'middle',
-					  rotate: 90,
-					  formatter: '{c}°C',
-					  fontSize: 22
-				  }
-			  };
 			// specify chart configuration item and data
 			var option = {
 				color: ['#003366', '#006699', '#4cabce'],
 				tooltip: { trigger: 'axis', axisPointer: { type: 'cross', crossStyle: { color: '#999' } } },
 				//legend: { data:['Voltage'] },
 				xAxis: [
-					{gridIndex: 0,name:'',type:'category',}
+					{gridIndex: 0,type:'category'}
+					,{show: false, gridIndex: 1,type:'category'}
 					],
 				yAxis: [
 					{gridIndex: 0,name:'',type:'value',min:2.5,max:4.3,interval:0.2,position:'left', axisLabel: { formatter: '{value}V' }}
+					,{show: false,gridIndex: 1,name:'',type:'value',min:-1,max:0,position:'right'} 
 					],
 				series: [
 					{ name: 'Voltage', type: 'bar', data:[],label: labelOption}
 					,{ name: 'Min V', type: 'line', data:[],label: labelOption4,symbolSize: 10, symbol:['circle'], itemStyle:{normal:{lineStyle:{color:'transparent',type:'dotted'}} } }
 					,{ name: 'Max V', type: 'line', data:[],label: labelOption3,symbolSize: 10, symbol:['triangle'], itemStyle:{normal:{lineStyle:{color:'transparent',type:'dotted'}} } }
-					
+					,{xAxisIndex:1, yAxisIndex:1, name:'isBalance',type:'bar', data: [],
+						barWidth:10,itemStyle:{barBorderRadius:5, color: '#ff0000'}}
 					],
 				grid: [
 					{containLabel:false,
-					left:'50px',
-					right:'50px',
-					bottom:'20px',
-                    top:'100px'}
+						left:'5%',
+						right:'5%',
+						top:'15%'},
+					{containLabel:false,
+						left:'5%',
+						right:'5%',
+						bottom:'85%'}
+					
 					]
 			};
         // use configuration item and data specified to show chart

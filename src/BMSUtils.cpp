@@ -20,14 +20,15 @@
 uint16_t voltages[14];
 uint16_t voltagesMax[14] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 uint16_t voltagesMin[14] = {5000,5000,5000,5000,5000,5000,5000,5000,5000,5000,5000,5000,5000,5000};
+int cellBallance[16] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 String inString = "";      // string to hold input
 String inStringpc = "";    // string to hold PC input
 int show = 1;    // show all data flag
-int incomingByte, BalanceCode, Length, highbyte, lowbyte;
+int incomingByte, Length, highbyte, lowbyte;
 byte Mosfet_control, mosfetnow, BatteryConfigH, BatteryConfigL, bcl, bcln, bch, Checksum, switche;
 uint8_t BYTE1, BYTE2, BYTE3, BYTE4, BYTE5, BYTE6, BYTE7, BYTE8, BYTE9, BYTE10;
-uint8_t inInts[40], data[9];   // an array to hold incoming data, not seen any longer than 34 bytes, or 9
+uint8_t inInts[40], data[9], BalanceCode;   // an array to hold incoming data, not seen any longer than 34 bytes, or 9
 uint16_t a16bitvar;
 float  eresultf; //Cellv1, Cellv2, Cellv3, Cellv4, Cellv5, Cellv6, Cellv7, Cellv8,
 float CellMin = 5, CellMax = 0, Cellsum = 0, Celldiff;
@@ -40,38 +41,6 @@ float PackCurrentf;
 int RSOC;
 
 // START //
-
-// prints integer in binary format, nibbles, with leading zeros
-void print_binary(int v, int num_places)
-// altered a bit, but got from here,
-// https://phanderson.com/arduino/arduino_display.html
-{
-  MyDebug.println("");
-  MyDebug.print("  ");
-  int mask = 0, n;
-  for (n = 1; n <= num_places; n++)
-  {
-    mask = (mask << 1) | 0x0001;
-  }
-  v = v & mask;  // truncate v to specified number of places
-  while (num_places)
-  {
-    if (v & (0x0001 << (num_places - 1)))
-    {
-      MyDebug.print("1        ");
-    }
-    else
-    {
-      MyDebug.print("0        ");
-    }
-    --num_places;
-    if (((num_places % 4) == 0) && (num_places != 0))
-    {
-      MyDebug.print("");
-    }
-  }
-}
-
 byte Bit_Reverse( byte x )
 // http://www.nrtm.org/index.php/2013/07/25/reverse-bits-in-a-byte/
 {
@@ -82,6 +51,61 @@ byte Bit_Reverse( byte x )
   //          00001111  |         11110000
   x = ((x >> 4) & 0x0f) | ((x << 4) & 0xf0);
   return x;
+}
+
+// prints integer in binary format, nibbles, with leading zeros
+void print_binary(int v, int v2, int num_places) // prints integer in binary format, nibbles, with leading zeros
+// altered a bit, but got from here,  https://phanderson.com/arduino/arduino_display.html
+{
+  Serial.println("");
+  Serial.print("  ");
+  int mask = 0, n, places = num_places;
+  for (n = 1; n <= places; n++)
+  {
+    mask = (mask << 1) | 0x0001;
+  }
+  //v= Bit_Reverse( v );
+  v = v & mask;  // truncate v to specified number of places
+  while (places)
+  {
+    if (v & (0x0001 << (places - 1)))
+    {
+      Serial.print("1        ");
+      cellBallance[places-1] = -1;
+    }
+    else
+    {
+      Serial.print("0        ");
+      cellBallance[places-1] = 0;
+    }
+    --places;
+    if (((places % 4) == 0) && (places != 0))
+    {
+      Serial.print("");
+    }
+  }
+  //v2= Bit_Reverse( v2 );
+  v2 = v2 & mask;  // truncate v to specified number of places
+  places = num_places;
+  while (places)
+  {
+    if (v2 & (0x0001 << (places - 1)))
+    {
+      Serial.print("1        ");
+      cellBallance[(places-1)+8] = -1;
+    }
+    else
+    {
+      Serial.print("0        ");
+      cellBallance[(places-1)+8] = 0;
+    }
+    --places;
+    if (((places % 4) == 0) && (places != 0))
+    {
+      Serial.print("");
+    }
+  
+  }
 }
 
 void flush()
@@ -173,6 +197,7 @@ uint8_t call_read_eprom()
 {
   flush(); // flush first
   // BYTES 3 and 6 need to be set first
+  // DD A5 BYTE3 00 FF BYTE6 77
   uint8_t data1[7] = {221, 165, BYTE3, 0, 255, BYTE6, 119};
   MyDebug.println();
   MyDebug.println("call_read_eprom(DD A5 BYTE3 0 FF BYTE6 77)");
@@ -250,11 +275,19 @@ void storeCellVoltageInfo()
 void storeBasicInfo()
 {
     //  MyDebug.print(" BC= ");
-    BalanceCode = inInts[13]; //  the 13th byte
-    BalanceCode = Bit_Reverse( BalanceCode ) ; // reverse the bits, so they are in same order as cells
-    //  MyDebug.print(BalanceCode, BIN); // works, but, loses leading zeros and get confusing on screen
-    print_binary(BalanceCode, 8);// print balance state as binary, cell 1 on the right, cell 8 on left
-    //                                    Reversed this. 1 on left, 8 on right
+    //BalanceCode=two_ints_into16(inInts[14],inInts[13]);
+     //BalanceCode= inInts[13]; //  the 13th byte
+     // reverse the bits, so they are in same order as cells
+   // BalanceCode = Bit_Reverse( BalanceCode ) ; 
+    //  MyDebug.print(BalanceCode, BIN); 
+    // works, but, loses leading zeros and get confusing on screen
+    // print balance state as binary, cell 1 on the right, cell 8 on left
+    // Reversed this. 1 on left, 8 on right
+    
+    print_binary(inInts[13],inInts[14], 8);
+   // BalanceCode= inInts[14]; //  the 14th byte
+   // BalanceCode = Bit_Reverse( BalanceCode ) ; 
+    //print_binary(BalanceCode, 8);
     
     MyDebug.println("Balancing Cells = 1");
     MyDebug.println(" ");
@@ -309,7 +342,6 @@ void storeBasicInfo()
     MyDebug.print("   Temp probe 2 = ");
     MyDebug.print(Temp_probe_2f);
     MyDebug.println(" ");
-
 }
 
 void call_Basic_info()
@@ -473,7 +505,8 @@ void getPUVP()
 void getCOVP()
 {
   // COVP
-  //   36  220
+  // 36   24 
+  // 220  DC
   // ONLY BYTES 3 AND 6 CHANGE
   BYTE3 = 36;
   BYTE6 = 220;
@@ -487,6 +520,8 @@ void getCOVP()
 void getCUVP()
 {
   // CUVP
+  // 38   26
+  // 218  DA
   BYTE3 = 38;
   BYTE6 = 218;
   call_read_eprom(); // having called this eresultf, will hold the float value
@@ -514,7 +549,8 @@ void getPOVPRelease()
 void getPUVPRelease()
 {
   // PUVPRelease
-  //   35  221
+  //   35   221
+  //   23   DD  
   // ONLY BYTES 3 AND 6 CHANGE
   BYTE3 = 35;
   BYTE6 = 221;
@@ -528,7 +564,8 @@ void getPUVPRelease()
 void getCOVPRelease()
 {
   // COVPRelease
-  //   37  219
+  //   37   219
+  //   25   DB
   // ONLY BYTES 3 AND 6 CHANGE
   BYTE3 = 37;
   BYTE6 = 219;
@@ -542,6 +579,8 @@ void getCOVPRelease()
 void getCUVPRelease()
 {
   // CUVPRelease
+  //   39   217
+  //   27   D9
   BYTE3 = 39;
   BYTE6 = 217;
   call_read_eprom(); // having called this eresultf, will hold the float value
@@ -554,6 +593,8 @@ void getCUVPRelease()
 void getCHGOC()
 {
   // CHGOC
+  //   40   216
+  //   28   D8
   BYTE3 = 40;
   BYTE6 = 216;
   call_read_eprom(); // having called this eresultf, will hold the float value
@@ -566,6 +607,8 @@ void getCHGOC()
 void getDSGOC()
 {
   // DSGOC
+  //   41   215
+  //   29   D7
   BYTE3 = 41;
   BYTE6 = 215;
   call_read_eprom(); // having called this eresultf, will hold the float value
@@ -579,6 +622,8 @@ void getBatteryFunctions()
 {
   //  BatteryConfig, BALANCE ENABLE and CHARGE BALANCE CONTROL
   // long hand as different needs
+  //   45   211
+  //   2D   D3
   BYTE3 = 45;
   BYTE6 = 211;
   flush(); // flush first
